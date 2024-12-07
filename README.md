@@ -1,4 +1,3 @@
-# youtube-shorts-disable-scrolling
 # 🚫 YouTube Shorts Scroll Blocker
 
 ### **What It Does:**
