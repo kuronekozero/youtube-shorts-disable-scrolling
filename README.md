@@ -14,4 +14,4 @@
 
 ### **How to Install:**
 1. **Install [Tampermonkey](https://www.tampermonkey.net/) (or similar extension).**
-2. **Install [the script](https://www.tampermonkey.net/).**
+2. **Install [the script](https://greasyfork.org/en/scripts/520071-youtube-shorts-disable-scrolling).**
