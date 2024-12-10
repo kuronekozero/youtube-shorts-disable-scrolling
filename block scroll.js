@@ -1,17 +1,18 @@
 // ==UserScript==
-// @name         YouTube shorts: Disable scrolling
-// @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Disables all the possible ways you can scroll down youtube shorts
+// @name         YouTube Shorts: Disable Scrolling 
+// @namespace    https://github.com/kuronekozero/youtube-shorts-disable-scrolling
+// @version      0.2
+// @description  Disables scrolling only on YouTube Shorts and restores it when you leave.
 // @icon         https://github.com/kuronekozero/youtube-shorts-disable-scrolling/blob/main/logo.webp
 // @author       Timothy (kuronek0zero)
-// @namespace    https://github.com/kuronekozero/youtube-shorts-disable-scrolling
-// @match        https://www.youtube.com/shorts/*
+// @match        https://www.youtube.com/*
 // @grant        GM_addStyle
 // @license      MIT
+// @downloadURL  https://update.greasyfork.org/scripts/520071/YouTube%20shorts%3A%20Disable%20scrolling.user.js
+// @updateURL    https://update.greasyfork.org/scripts/520071/YouTube%20shorts%3A%20Disable%20scrolling.meta.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // Function to block events
@@ -21,7 +22,7 @@
         return false;
     };
 
-    // Function to remove navigation buttons
+    // Remove navigation buttons
     const removeNavButtons = () => {
         const navButtons = document.querySelectorAll(
             '#navigation-button-up, #navigation-button-down'
@@ -32,20 +33,17 @@
         });
     };
 
-    // Disable all scrolling methods
+    // Disable scrolling
     const disableScrolling = () => {
-        // Disable mouse wheel
+        console.log("Scroll Disabled");
+        // Disable mouse, touch, and key scrolling
         document.addEventListener('wheel', blockEvent, { passive: false, capture: true });
-
-        // Disable touch scrolling
         document.addEventListener('touchmove', blockEvent, { passive: false, capture: true });
-
-        // Disable key scrolling
         document.addEventListener('keydown', (e) => {
             const keysToBlock = [
-                'ArrowUp', 'ArrowDown', 
+                'ArrowUp', 'ArrowDown',
                 'ArrowLeft', 'ArrowRight',
-                'Space', 'PageUp', 'PageDown', 
+                'Space', 'PageUp', 'PageDown',
                 'Home', 'End', 'Tab'
             ];
             if (keysToBlock.includes(e.code)) {
@@ -53,26 +51,55 @@
             }
         }, { passive: false, capture: true });
 
-        // Disable window scrolling
-        window.addEventListener('scroll', () => {
-            window.scrollTo(0, 0);
-        });
-
         // Disable scrollbar visibility
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
-
-        console.log("YouTube Shorts Scroll Blocker Activated!");
     };
 
-    // Reapply scroll lock and remove navigation buttons when DOM changes
-    const observer = new MutationObserver(() => {
-        disableScrolling();
-        removeNavButtons();
-    });
-    observer.observe(document, { childList: true, subtree: true });
+    // Restore scrolling
+    const enableScrolling = () => {
+        console.log("Scroll Restored");
+        // Remove event listeners to restore scrolling
+        document.removeEventListener('wheel', blockEvent, true);
+        document.removeEventListener('touchmove', blockEvent, true);
+        document.removeEventListener('keydown', blockEvent, true);
 
-    // Apply on load
-    disableScrolling();
-    removeNavButtons();
+        // Reset scroll styles
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+    };
+
+    // Monitor URL changes
+    const monitorURLChange = () => {
+        let previousURL = window.location.href;
+
+        const observer = new MutationObserver(() => {
+            const currentURL = window.location.href;
+
+            if (currentURL !== previousURL) {
+                if (currentURL.includes('/shorts/')) {
+                    console.log('Entered YouTube Shorts.');
+                    disableScrolling();
+                    removeNavButtons();  // Clean up navigation buttons
+                } else {
+                    console.log('Exited YouTube Shorts.');
+                    enableScrolling();  // Restore scrolling on other pages
+                }
+                previousURL = currentURL;  // Update current URL
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    };
+
+    // Initial Check + Start Monitoring
+    const initialize = () => {
+        if (window.location.href.includes('/shorts/')) {
+            disableScrolling();
+            removeNavButtons();
+        }
+        monitorURLChange();  // Watch for page transitions
+    };
+
+    initialize();
 })();
